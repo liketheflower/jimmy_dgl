@@ -155,17 +155,20 @@ class GIN(nn.Module):
         # list of hidden representation at each layer (including input)
         hidden_rep = [h]
         print(f"g, {g}")
-        print(f"h.size {h.size}")
+        print(f"h.size {h.size()}")
         print(f"h {h}")
         print(f"num_layers, {self.num_layers}")
         for i in range(self.num_layers - 1):
             print(f"i {i}")
+            print(f"h.size {h.size()}")
             print('h begining', h)
             h = self.ginlayers[i](g, h)
+            print(f"h.size {h.size()}")
             print('h after gin', h)
             #h = self.batch_norms[i](h)
             #print('h after gin', h)
             h = F.relu(h)
+            print(f"h.size {h.size()}")
             print('h after relu', h)
             hidden_rep.append(h)
 
@@ -174,14 +177,18 @@ class GIN(nn.Module):
 
         # perform pooling over all nodes in each graph in every layer
         for i, h in enumerate(hidden_rep):
+            print(f"h.size {h.size()}")
             print(f"i, h in hidden_rep {h}")
             pooled_h = self.pool(g, h)
+            print(f"h.size {h.size()}")
             print(f"pooled_h {pooled_h}")
 
             #score_over_layer += self.drop(self.linears_prediction[i](pooled_h))
             this_layer= self.linears_prediction[i](pooled_h)
+            print(f"this_layer, {this_layer.size()}")
             print(f"this_layer, {this_layer}")
             score_over_layer += self.linears_prediction[i](pooled_h)
+            print(f"score_over_layer {score_over_layer.size()}")
             print(f"score_over_layer {score_over_layer}")
 
         return score_over_layer
