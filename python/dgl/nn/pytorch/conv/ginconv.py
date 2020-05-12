@@ -32,9 +32,12 @@ class GINConv(nn.Module):
                  apply_func,
                  aggregator_type,
                  init_eps=0,
-                 learn_eps=False):
+                 learn_eps=False,
+                 debug=True):
         super(GINConv, self).__init__()
         self.apply_func = apply_func
+        self.debug = debug
+        if self.debug:print(aggregator_type, learn_eps)
         if aggregator_type == 'sum':
             self._reducer = fn.sum
         elif aggregator_type == 'max':
@@ -73,10 +76,25 @@ class GINConv(nn.Module):
             as input dimensionality.
         """
         with graph.local_scope():
+            OUTPUT = True
             feat_src, feat_dst = expand_as_pair(feat)
+            if OUTPUT:print(f"feat.size() {feat.size()}")
+            if OUTPUT:print(f"feat {feat}")
+            if OUTPUT:print(f"feat_src.size() {feat_src.size()}")
+            if OUTPUT:print(f"feat_src {feat_src}")
+            if OUTPUT:print(f"feat_dst.size() {feat_dst.size()}")
+            if OUTPUT:print(f"feat_dst {feat_dst}")
             graph.srcdata['h'] = feat_src
+            if OUTPUT:print(f"before update graph.srcdata {graph.srcdata}")
+            if OUTPUT:print(f"before update graph.dstdata {graph.dstdata}")
             graph.update_all(fn.copy_u('h', 'm'), self._reducer('m', 'neigh'))
             rst = (1 + self.eps) * feat_dst + graph.dstdata['neigh']
+            if OUTPUT:print(f"after update graph.srcdata {graph.srcdata}")
+            if OUTPUT:print(f"after update graph.dstdata {graph.dstdata}")
+            if OUTPUT:print(f"rst.size() {rst.size()}")
+            if OUTPUT:print(f"rst {rst}")
             if self.apply_func is not None:
                 rst = self.apply_func(rst)
+            if OUTPUT:print(f"after MLP rst.size() {rst.size()}")
+            if OUTPUT:print(f"after MLP rst {rst}")
             return rst
